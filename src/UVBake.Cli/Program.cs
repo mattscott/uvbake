@@ -31,6 +31,7 @@ internal static class Program
         var d = new UVBakeOptions();
         string? input = null;
         string? output = null;
+        string? layout = null;
         int resolution = d.Resolution;
         int gutter = d.GutterPixels;
         double? texelsPerUnit = d.TexelsPerUnit;
@@ -48,6 +49,9 @@ internal static class Program
             {
                 case "-o" or "--output":
                     output = RequireValue(args, ref i, arg);
+                    break;
+                case "--layout":
+                    layout = RequireValue(args, ref i, arg);
                     break;
                 case "--res" or "--resolution":
                     resolution = int.Parse(RequireValue(args, ref i, arg), CultureInfo.InvariantCulture);
@@ -126,6 +130,12 @@ internal static class Program
             Console.WriteLine($"wrote {output}");
         }
 
+        if (layout is not null)
+        {
+            UvLayoutSvg.Write(result.Mesh, layout);
+            Console.WriteLine($"wrote {layout}");
+        }
+
         return 0;
     }
 
@@ -149,7 +159,8 @@ internal static class Program
         Console.WriteLine("Produces a unique, non-overlapping UV layout with seams on hard edges, for a downstream baker.");
         Console.WriteLine();
         Console.WriteLine("options:");
-        Console.WriteLine($"  -o, --output <path>   write the atlas OBJ (per-wedge UVs); omit for a dry run");
+        Console.WriteLine($"  -o, --output <path>   write the atlas (.obj per-wedge UVs, or .gltf); omit for a dry run");
+        Console.WriteLine("  --layout <path.svg>   write an SVG of the packed UV layout (islands colored by chart)");
         Console.WriteLine($"  --res <n>             atlas resolution (default {d.Resolution})");
         Console.WriteLine($"  --gutter <n>          inter-island gutter in texels (default {d.GutterPixels})");
         Console.WriteLine("  --density <x>         fixed texels-per-unit; spills across UDIM tiles if needed (default: auto-fit one tile)");

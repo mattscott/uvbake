@@ -5,12 +5,15 @@ CLI that automatically generates a **UV atlas** for a mesh: a **unique, non-over
 parameterization with the **largest possible low-distortion islands**, normalized texel density, and
 seams on hard edges — built so the result can be **textured/baked** cleanly.
 
-It is a **clean-room** implementation: mesh **segmentation into charts** → **conformal/ARAP
-parameterization** → **atlas packing**, with **no native dependencies**, MIT-clean.
+It is a **clean-room** implementation: mesh **segmentation into charts** → **injective parameterization**
+(LSCM conformal init → SLIM symmetric-Dirichlet polish) → **atlas packing**, with **no native
+dependencies** (an in-repo conjugate-gradient sparse solver), MIT-clean.
 
-> **Status: P0 — scaffold.** The solution builds and tests run; the unwrapper is not yet implemented.
-> See [`Agents/Plans`](Agents/Plans) for the roadmap and [`Agents/Documents`](Agents/Documents) for
-> the research it is based on.
+> **Status: end-to-end and shipping (P1–P7 complete).** The full pipeline runs — mesh in, unique
+> bake-ready UV atlas out — validated (overlap = 0, no flips, full coverage) on the procedural corpus.
+> See [`Agents/Plans`](Agents/Plans) for the roadmap, [`Agents/Documents`](Agents/Documents) for the
+> research, and [`Agents/Documents/10-technical-debt.md`](Agents/Documents/10-technical-debt.md) for
+> deferred/reduced items.
 
 ## Pipeline
 
@@ -42,10 +45,55 @@ tools/
 
 ```sh
 dotnet build
-dotnet test
+dotnet test          # 67 tests
 ```
 
 Requires the .NET 8 runtime (the SDK may be newer; `global.json` rolls forward).
+
+## CLI
+
+```sh
+# unwrap an OBJ into a bake-ready atlas
+uvbake model.obj -o model.uv.obj
+
+# common options
+uvbake model.obj -o atlas.obj \
+  --res 2048           # atlas resolution (square)
+  --gutter 8           # inter-island gutter (texels)
+  --max-stretch 0.25   # distortion budget for chart growth
+  --hard-edge 45       # dihedral hard-edge threshold (degrees)
+  --seams Both         # DihedralAngle | ProvidedTags | Both
+  --packer Silhouette  # BoundingBox (default) | Silhouette
+  --density 512        # fixed texels-per-unit; spills across UDIM tiles if needed
+
+# glTF output (UVs per-vertex, seams vertex-split) — chosen by extension
+uvbake model.obj -o atlas.gltf
+
+# also write an SVG of the packed layout (islands colored by chart)
+uvbake model.obj -o atlas.obj --layout atlas.svg
+```
+
+Run `uvbake --help` for the full option list. The CLI installs as a .NET tool (`dotnet tool install`,
+command `uvbake`).
+
+## Library
+
+```csharp
+using UVBake.Core;
+using UVBake.IO;
+
+Mesh mesh = MeshIo.Read("model.obj");
+UvMesh result = UVBaker.Generate(mesh, new UVBakeOptions { Resolution = 2048, GutterPixels = 8 });
+
+// Hard gates: overlap = 0, no flips, full coverage.
+if (result.Validation.IsValid)
+{
+    MeshIo.Write(result.Mesh, "model.uv.obj");   // per-wedge UVs (seams round-trip)
+}
+```
+
+`UVBaker.Generate` also has an overload taking `IProgress<string>` (per-phase progress) and a
+`CancellationToken`. `UVBake.Core` and `UVBake.IO` are published as NuGet packages.
 
 ## License
 
