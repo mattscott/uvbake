@@ -30,11 +30,19 @@ public static class UVBaker
         HardEdgeDetector.Detect(mesh, input.Creases, options.HardEdgeAngleDegrees, options.Seams);
         SegmentationResult segmentation = ChartSegmenter.Segment(mesh, options);
 
-        var charts = new List<ChartUv>(segmentation.Charts.Count);
-        foreach (Chart chart in segmentation.Charts)
+        // Charts are independent ⇒ parameterize across charts in parallel. Results are written by index,
+        // so the output is order-independent; each chart's work is deterministic (no RNG, fixed iteration
+        // counts, sequential reductions), so the parallel result is bit-identical to the serial one.
+        IReadOnlyList<Chart> chartList = segmentation.Charts;
+        var charts = new ChartUv[chartList.Count];
+        var parallelOptions = new ParallelOptions
         {
-            charts.Add(ChartParameterizer.Parameterize(mesh, chart.Faces, solver));
-        }
+            MaxDegreeOfParallelism = options.Threads <= 0 ? -1 : options.Threads,
+        };
+        Parallel.For(0, chartList.Count, parallelOptions, i =>
+        {
+            charts[i] = ChartParameterizer.Parameterize(mesh, chartList[i].Faces, solver);
+        });
 
         TexelDensityNormalizer.Normalize(charts);
 
