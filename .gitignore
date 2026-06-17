@@ -30,6 +30,10 @@ coverage/
 tools/reference-oracle/_work/
 tools/reference-oracle/*.log
 
+# Downloaded tier-B corpus meshes (large, externally hosted). The tier-A procedural corpus under
+# tests/corpus/*.obj IS committed; only the downloaded raws are ignored.
+tests/corpus/downloaded/
+
 # OS cruft
 Thumbs.db
 .DS_Store

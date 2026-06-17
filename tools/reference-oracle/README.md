@@ -27,8 +27,21 @@ diff: hard-gate on **overlap = 0** and **full coverage** (every face parameteriz
 **max/avg stretch**, **chart count**, **total seam length**, and **packing efficiency (% texels used)**
 against the oracle within tolerance; emit a rendered UV-layout PNG as a CI artifact on failure.
 
+## Harness scripts
+
+| Script | Purpose |
+|---|---|
+| `download-corpus.ps1` | Fetch the tier-B real meshes (spot, armadillo, bunny, gazebo) into `tests/corpus/downloaded/` (git-ignored). |
+| `build-xatlas.ps1` | Clone + CMake-build xatlas into `_work/` (git-ignored). Needs git/cmake/C++ toolchain; the heavy native step, not run in CI. |
+| `run-oracle.ps1` | Run the built xatlas over the corpus, emitting golden UV layouts + metrics into `tests/golden/`. |
+
+The tier-A procedural corpus (`cube`, `sphere`, `cylinder`, `beveled-box`, `torus`) is generated in-code
+(`tests/UVBake.Tests/Corpus/Primitives.cs`) and committed under `tests/corpus/`; regenerate it with
+`UVBAKE_WRITE_CORPUS=1 dotnet test --filter CorpusGeneration`.
+
 ## Status
 
-Scaffold only — scripts are added in **P0/P1** (see
-[`../../Agents/Plans/02-phase-roadmap.md`](../../Agents/Plans/02-phase-roadmap.md)). The working tree
-(`_work/`, logs) is git-ignored; the committed goldens under `tests/golden/` are not.
+Harness in place (P1). The native xatlas build + golden generation is **not** run yet — it lights up the
+golden gate in **P4** (see [`../../Agents/Plans/02-phase-roadmap.md`](../../Agents/Plans/02-phase-roadmap.md)).
+The working tree (`_work/`, logs) and downloaded raws are git-ignored; the committed goldens under
+`tests/golden/` are not.
