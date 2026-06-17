@@ -1,0 +1,18 @@
+# Normalize all text files to LF in the repository (cross-platform: CI runs Windows + Linux).
+* text=auto eol=lf
+
+# Visual Studio expects CRLF in solution files.
+*.sln text eol=crlf
+
+# Scripts must stay LF even on Windows checkouts.
+*.ps1 text eol=lf
+*.sh  text eol=lf
+
+# Binary assets (never normalize line endings). OBJ/glTF text meshes are NOT binary.
+*.glb  binary
+*.bin  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.exr  binary
+*.tga  binary

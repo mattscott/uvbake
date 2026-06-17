@@ -1,0 +1,22 @@
+<Project>
+
+  <!-- Central Package Management: versions live here, not in csproj files. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Test-only dependencies. UVBake.Core/IO stay dependency-light. -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageVersion Include="xunit" Version="2.9.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.2" />
+  </ItemGroup>
+
+  <!--
+    Runtime dependencies are added per phase (see Agents/Plans/02-phase-roadmap.md), all
+    pure-managed and MIT-clean — e.g. CSparse.NET (sparse linear solves for LSCM/ARAP). Native
+    UV libraries (xatlas, UVAtlas) are used only as an offline reference oracle, never linked.
+  -->
+
+</Project>

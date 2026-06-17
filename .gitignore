@@ -1,0 +1,38 @@
+# .NET build output
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+artifacts/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test results
+[Tt]est[Rr]esults/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# Reference-oracle working tree (xatlas/Blender are run locally to emit goldens;
+# the committed golden UV layouts/metrics under tests/golden ARE committed, the working tree is not).
+tools/reference-oracle/_work/
+tools/reference-oracle/*.log
+
+# OS cruft
+Thumbs.db
+.DS_Store
+
+# Claude Code personal/local settings (shared .claude/settings.json may be committed)
+.claude/settings.local.json

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>UVBake.Core</RootNamespace>
+    <AssemblyName>UVBake.Core</AssemblyName>
+    <Description>Automatic UV atlas generator (chart segmentation + parameterization + packing) — managed, dependency-light.</Description>
+    <!-- Core keeps a dependency-light runtime graph (see Agents/Documents/08). -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="UVBake.Tests" />
+  </ItemGroup>
+
+</Project>

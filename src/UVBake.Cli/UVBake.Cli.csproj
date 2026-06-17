@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>UVBake.Cli</RootNamespace>
+    <AssemblyName>uvbake</AssemblyName>
+    <Description>Command-line front-end for the UVBake library.</Description>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UVBake.Core\UVBake.Core.csproj" />
+    <ProjectReference Include="..\UVBake.IO\UVBake.IO.csproj" />
+  </ItemGroup>
+
+</Project>

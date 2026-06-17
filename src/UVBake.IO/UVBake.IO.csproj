@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>UVBake.IO</RootNamespace>
+    <AssemblyName>UVBake.IO</AssemblyName>
+    <Description>Mesh readers/writers (OBJ first; per-wedge UVs at seams) for UVBake.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UVBake.Core\UVBake.Core.csproj" />
+  </ItemGroup>
+
+</Project>
