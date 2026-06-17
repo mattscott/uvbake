@@ -4,7 +4,7 @@ using UVBake.Core.Validation;
 namespace UVBake.Core;
 
 /// <summary>
-/// The output of <see cref="UVBaker.Generate"/>: the input mesh, triangulated, carrying a unique
+/// The output of <see cref="UVBaker"/>'s Generate: the input mesh, triangulated, carrying a unique
 /// bake-ready UV atlas as <b>per-wedge UVs</b> (a seam is one position referenced by corners with
 /// different texcoords). <see cref="Mesh"/> is ready to write as OBJ; <see cref="Validation"/> records
 /// the hard-gate result (overlap = 0, no flips, full coverage).
