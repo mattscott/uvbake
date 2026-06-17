@@ -8,7 +8,7 @@ namespace UVBake.IO;
 /// Reads Wavefront OBJ into a <see cref="Mesh"/>, preserving per-wedge attributes (a face corner keeps
 /// its own <c>v</c>/<c>vt</c>/<c>vn</c> indices, so seam UVs survive). Supports positions, texcoords,
 /// normals, polygonal faces with 1-based or negative (relative) indices, and smoothing groups (<c>s</c>),
-/// from which crease edges are derived for <see cref="SeamSource.ProvidedTags"/>. Other directives
+/// from which crease edges are derived for <see cref="UVBake.Core.SeamSource.ProvidedTags"/>. Other directives
 /// (groups, materials, comments) are ignored.
 /// </summary>
 public static class ObjReader

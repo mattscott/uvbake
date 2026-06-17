@@ -6,6 +6,11 @@
     <AssemblyName>uvbake</AssemblyName>
     <Description>Command-line front-end for the UVBake library.</Description>
     <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!-- Installable as a .NET global/local tool: `dotnet tool install ... uvbake`. -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>uvbake</ToolCommandName>
+    <PackageId>UVBake.Cli</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

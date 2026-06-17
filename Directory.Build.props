@@ -17,11 +17,20 @@
     <Deterministic>true</Deterministic>
     <InvariantGlobalization>true</InvariantGlobalization>
 
-    <!-- Packaging metadata (used from the packaging phase; harmless now). -->
+    <!-- Packaging metadata. -->
+    <Version>1.0.0</Version>
     <Authors>Matthew Scott</Authors>
     <Product>UVBake</Product>
     <Copyright>Copyright (c) 2026 Matthew Scott</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/mattscott/uvbake</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/mattscott/uvbake</PackageProjectUrl>
+    <PackageTags>uv;uv-atlas;uv-unwrap;texture;parameterization;mesh;baking;lightmap</PackageTags>
+
+    <!-- Emit XML docs for the public API (IntelliSense); CS1591 off so obvious members need no doc. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <!-- Embed source-control metadata only on CI builds. -->
