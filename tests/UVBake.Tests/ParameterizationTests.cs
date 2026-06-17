@@ -35,6 +35,38 @@ public class ParameterizationTests
     }
 
     [Fact]
+    public void Lscm_PlanarChartsAreConformalAndFlipFree()
+    {
+        // Cube faces are planar → LSCM drives conformal energy to ~0 → K ≈ 1 with no flips.
+        (HalfEdgeMesh mesh, SegmentationResult seg) = Segment(Primitives.Cube());
+
+        foreach (Chart chart in seg.Charts)
+        {
+            ChartUv uv = LscmParameterizer.Parameterize(mesh, chart.Faces);
+            ChartDistortion dist = DistortionMetrics.ForChart(uv);
+
+            Assert.False(dist.HasInvalidValues);
+            Assert.Equal(0, dist.FlipCount);
+            Assert.True(dist.MaxQuasiConformal < 1.001, $"K={dist.MaxQuasiConformal}");
+        }
+    }
+
+    [Fact]
+    public void Lscm_DevelopableChartsAreFlipFree()
+    {
+        (HalfEdgeMesh mesh, SegmentationResult seg) = Segment(Primitives.Cylinder());
+
+        foreach (Chart chart in seg.Charts)
+        {
+            ChartUv uv = LscmParameterizer.Parameterize(mesh, chart.Faces);
+            ChartDistortion dist = DistortionMetrics.ForChart(uv);
+
+            Assert.False(dist.HasInvalidValues);
+            Assert.Equal(0, dist.FlipCount);
+        }
+    }
+
+    [Fact]
     public void Tutte_IsDeterministic()
     {
         (HalfEdgeMesh mesh, SegmentationResult seg) = Segment(Primitives.Sphere());

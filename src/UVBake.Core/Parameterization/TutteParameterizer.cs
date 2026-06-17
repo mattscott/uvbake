@@ -30,7 +30,7 @@ public static class TutteParameterizer
         var uv = new Vector2[topology.VertexCount];
         PlaceBoundaryOnCircle(topology, uv);
         SolveInterior(topology, uv, solver);
-        OrientPositively(topology, uv);
+        UvOrientation.MakePositive(topology.Triangles, uv);
 
         return new ChartUv((int[])topology.LocalToGlobal.Clone(), (Vector3[])topology.Position.Clone(), uv, (int[])topology.Triangles.Clone());
     }
@@ -122,25 +122,4 @@ public static class TutteParameterizer
         }
     }
 
-    private static void OrientPositively(ChartTopology topology, Vector2[] uv)
-    {
-        // Tutte yields a consistent orientation; reflect if it came out mirrored so det J > 0 everywhere.
-        double signedArea = 0;
-        int[] tris = topology.Triangles;
-        for (int t = 0; t < tris.Length; t += 3)
-        {
-            Vector2 a = uv[tris[t]];
-            Vector2 b = uv[tris[t + 1]];
-            Vector2 c = uv[tris[t + 2]];
-            signedArea += (b - a).Cross(c - a);
-        }
-
-        if (signedArea < 0)
-        {
-            for (int v = 0; v < uv.Length; v++)
-            {
-                uv[v] = new Vector2(-uv[v].X, uv[v].Y);
-            }
-        }
-    }
 }
