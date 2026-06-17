@@ -3,8 +3,8 @@ using UVBake.Core.Parameterization;
 
 namespace UVBake.Core.Packing;
 
-/// <summary>Result of packing: the atlas resolution used and the fraction of texels the islands occupy.</summary>
-public sealed record PackResult(int Resolution, double Efficiency, int ChartCount);
+/// <summary>Result of packing: atlas resolution, the texel fraction the islands occupy, and UDIM tile count.</summary>
+public sealed record PackResult(int Resolution, double Efficiency, int ChartCount, int TileCount = 1);
 
 /// <summary>
 /// Packs normalized charts into one square atlas with a reserved gutter (Documents/05 §1–2). Each chart's
@@ -94,6 +94,113 @@ public static class AtlasPacker
         // Efficiency = fraction of the atlas covered by actual island (triangle) area, not box area.
         double efficiency = bestScale * bestScale * totalUvArea / ((double)resolution * resolution);
         return new PackResult(resolution, efficiency, charts.Count);
+    }
+
+    /// <summary>
+    /// Packs at a fixed texel density (<see cref="UVBakeOptions.TexelsPerUnit"/>), spilling charts that do
+    /// not fit the current 0–1 tile onto additional UDIM tiles (index 1001 + u + 10·v; UVs offset by the
+    /// tile's (u,v)). Density is uniform across tiles; each tile keeps its own gutter (Documents/05 §2).
+    /// </summary>
+    public static PackResult PackUdim(IReadOnlyList<ChartUv> charts, UVBakeOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(charts);
+        ArgumentNullException.ThrowIfNull(options);
+
+        double scale = options.TexelsPerUnit ?? 0;
+        if (scale <= 0)
+        {
+            return Pack(charts, options); // no fixed density → fall back to the auto single-tile fit
+        }
+
+        int resolution = options.PowerOfTwo ? NextPowerOfTwo(options.Resolution) : Math.Max(1, options.Resolution);
+        int gutter = Math.Max(0, options.GutterPixels);
+        if (charts.Count == 0)
+        {
+            return new PackResult(resolution, 0, 0);
+        }
+
+        double totalUvArea = 0;
+        var size = new (double W, double H)[charts.Count];
+        for (int i = 0; i < charts.Count; i++)
+        {
+            (double w, double h) = BoundingBox(charts[i]);
+            if (options.AllowRotation && w > h)
+            {
+                Rotate90(charts[i], w);
+                (w, h) = (h, w);
+            }
+
+            size[i] = (w, h);
+            totalUvArea += UvArea(charts[i]);
+        }
+
+        var order = new int[charts.Count];
+        for (int i = 0; i < order.Length; i++)
+        {
+            order[i] = i;
+        }
+
+        Array.Sort(order, (a, b) =>
+        {
+            double areaA = size[a].W * size[a].H, areaB = size[b].W * size[b].H;
+            return areaA != areaB ? areaB.CompareTo(areaA) : a.CompareTo(b);
+        });
+
+        var skylines = new List<Skyline>();
+        var placement = new (int Tile, int X, int Y)[charts.Count];
+        foreach (int i in order)
+        {
+            int boxW = (int)Math.Ceiling(size[i].W * scale) + gutter;
+            int boxH = (int)Math.Ceiling(size[i].H * scale) + gutter;
+            if (boxW > resolution || boxH > resolution)
+            {
+                throw new InvalidOperationException(
+                    "TexelsPerUnit is too high: a chart exceeds one atlas tile. Lower the density or raise the resolution.");
+            }
+
+            int tile = -1;
+            (int X, int Y) spot = default;
+            for (int t = 0; t < skylines.Count; t++)
+            {
+                (int X, int Y)? candidate = skylines[t].Place(boxW, boxH);
+                if (candidate is not null)
+                {
+                    tile = t;
+                    spot = candidate.Value;
+                    break;
+                }
+            }
+
+            if (tile < 0)
+            {
+                var skyline = new Skyline(resolution, resolution);
+                spot = skyline.Place(boxW, boxH)
+                    ?? throw new InvalidOperationException("Chart does not fit an empty tile.");
+                skylines.Add(skyline);
+                tile = skylines.Count - 1;
+            }
+
+            placement[i] = (tile, spot.X, spot.Y);
+        }
+
+        double half = gutter / 2.0;
+        for (int i = 0; i < charts.Count; i++)
+        {
+            (int tile, int x, int y) = placement[i];
+            int tileU = tile % 10;
+            int tileV = tile / 10;
+            Vector2[] uv = charts[i].Uv;
+            for (int v = 0; v < uv.Length; v++)
+            {
+                double u = (((uv[v].X * scale) + x + half) / resolution) + tileU;
+                double w = (((uv[v].Y * scale) + y + half) / resolution) + tileV;
+                uv[v] = new Vector2(u, w);
+            }
+        }
+
+        int tileCount = skylines.Count;
+        double efficiency = scale * scale * totalUvArea / ((double)tileCount * resolution * resolution);
+        return new PackResult(resolution, efficiency, charts.Count, tileCount);
     }
 
     private static (int X, int Y)[]? TryPack((double W, double H)[] size, double scale, int resolution, int gutter)

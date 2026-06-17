@@ -11,18 +11,22 @@ namespace UVBake.Core;
 /// </summary>
 public sealed class UvMesh
 {
-    public UvMesh(Mesh mesh, int resolution, AtlasValidation validation)
+    public UvMesh(Mesh mesh, int resolution, AtlasValidation validation, int tileCount = 1)
     {
         Mesh = mesh ?? throw new ArgumentNullException(nameof(mesh));
         Resolution = resolution;
         Validation = validation ?? throw new ArgumentNullException(nameof(validation));
+        TileCount = tileCount;
     }
 
-    /// <summary>The triangulated mesh with per-wedge atlas UVs in the [0,1] tile.</summary>
+    /// <summary>The triangulated mesh with per-wedge atlas UVs. With one tile, UVs lie in [0,1]; with UDIM spill, the integer part selects the tile.</summary>
     public Mesh Mesh { get; }
 
     /// <summary>Atlas resolution (texels, square).</summary>
     public int Resolution { get; }
+
+    /// <summary>Number of UDIM tiles the atlas spilled across (1 = a single 0–1 tile).</summary>
+    public int TileCount { get; }
 
     /// <summary>Hard-gate validation report for the produced atlas.</summary>
     public AtlasValidation Validation { get; }

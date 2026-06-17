@@ -37,13 +37,17 @@ public static class UVBaker
         }
 
         TexelDensityNormalizer.Normalize(charts);
-        PackResult pack = options.Packer == PackerKind.Silhouette
-            ? SilhouettePacker.Pack(charts, options)
-            : AtlasPacker.Pack(charts, options);
+
+        // A fixed target density may overflow one 0–1 tile → spill across UDIM tiles; otherwise auto-fit one tile.
+        PackResult pack = options.TexelsPerUnit.HasValue
+            ? AtlasPacker.PackUdim(charts, options)
+            : options.Packer == PackerKind.Silhouette
+                ? SilhouettePacker.Pack(charts, options)
+                : AtlasPacker.Pack(charts, options);
         AtlasValidation validation = AtlasValidator.Validate(charts, triangulated.Faces.Count, pack.Efficiency);
 
         Mesh output = BuildPerWedgeMesh(triangulated.Positions, charts);
-        return new UvMesh(output, pack.Resolution, validation);
+        return new UvMesh(output, pack.Resolution, validation, pack.TileCount);
     }
 
     private static Mesh BuildPerWedgeMesh(IReadOnlyList<Vector3> positions, IReadOnlyList<ChartUv> charts)

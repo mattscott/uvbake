@@ -38,7 +38,8 @@ public static class OverlapValidator
             }
         }
 
-        var grid = new Dictionary<long, List<int>>();
+        // Cells are not clamped, so UDIM tiles (UVs > 1) land in distinct cells and never falsely overlap.
+        var grid = new Dictionary<(int, int), List<int>>();
         for (int i = 0; i < triChart.Count; i++)
         {
             (int x0, int y0, int x1, int y1) = CellRange(triA[i], triB[i], triC[i]);
@@ -46,11 +47,10 @@ public static class OverlapValidator
             {
                 for (int gx = x0; gx <= x1; gx++)
                 {
-                    long key = ((long)gy * (GridResolution + 1)) + gx;
-                    if (!grid.TryGetValue(key, out List<int>? bucket))
+                    if (!grid.TryGetValue((gx, gy), out List<int>? bucket))
                     {
                         bucket = [];
-                        grid[key] = bucket;
+                        grid[(gx, gy)] = bucket;
                     }
 
                     bucket.Add(i);
@@ -97,7 +97,7 @@ public static class OverlapValidator
         return (Cell(minX), Cell(minY), Cell(maxX), Cell(maxY));
     }
 
-    private static int Cell(double coordinate) => Math.Clamp((int)(coordinate * GridResolution), 0, GridResolution);
+    private static int Cell(double coordinate) => (int)Math.Floor(coordinate * GridResolution);
 
     /// <summary>2D triangle–triangle overlap by the separating-axis theorem (no separating edge ⇒ overlap).</summary>
     private static bool TrianglesOverlap(Vector2 a0, Vector2 a1, Vector2 a2, Vector2 b0, Vector2 b1, Vector2 b2)

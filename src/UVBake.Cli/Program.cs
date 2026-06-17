@@ -33,6 +33,7 @@ internal static class Program
         string? output = null;
         int resolution = d.Resolution;
         int gutter = d.GutterPixels;
+        double? texelsPerUnit = d.TexelsPerUnit;
         double maxStretch = d.MaxStretch;
         double hardEdge = d.HardEdgeAngleDegrees;
         SeamSource seams = d.Seams;
@@ -53,6 +54,9 @@ internal static class Program
                     break;
                 case "--gutter":
                     gutter = int.Parse(RequireValue(args, ref i, arg), CultureInfo.InvariantCulture);
+                    break;
+                case "--texels-per-unit" or "--density":
+                    texelsPerUnit = double.Parse(RequireValue(args, ref i, arg), CultureInfo.InvariantCulture);
                     break;
                 case "--max-stretch":
                     maxStretch = double.Parse(RequireValue(args, ref i, arg), CultureInfo.InvariantCulture);
@@ -92,6 +96,7 @@ internal static class Program
         {
             Resolution = resolution,
             GutterPixels = gutter,
+            TexelsPerUnit = texelsPerUnit,
             MaxStretch = maxStretch,
             HardEdgeAngleDegrees = hardEdge,
             Seams = seams,
@@ -103,7 +108,8 @@ internal static class Program
         Mesh mesh = MeshIo.Read(input);
         UvMesh result = UVBaker.Generate(mesh, options);
 
-        Console.WriteLine($"charts packed into {result.Resolution}x{result.Resolution}; " +
+        string tiles = result.TileCount > 1 ? $" across {result.TileCount} UDIM tiles" : string.Empty;
+        Console.WriteLine($"charts packed into {result.Resolution}x{result.Resolution}{tiles}; " +
             $"packing {result.Validation.PackingEfficiency * 100:F1}%; " +
             $"overlap={(result.Validation.OverlapFree ? 0 : result.Validation.OverlapCount)}, " +
             $"flips={result.Validation.FlipCount}, coverage={(result.Validation.FullCoverage ? "full" : "partial")}");
@@ -146,6 +152,7 @@ internal static class Program
         Console.WriteLine($"  -o, --output <path>   write the atlas OBJ (per-wedge UVs); omit for a dry run");
         Console.WriteLine($"  --res <n>             atlas resolution (default {d.Resolution})");
         Console.WriteLine($"  --gutter <n>          inter-island gutter in texels (default {d.GutterPixels})");
+        Console.WriteLine("  --density <x>         fixed texels-per-unit; spills across UDIM tiles if needed (default: auto-fit one tile)");
         Console.WriteLine($"  --max-stretch <x>     distortion budget for chart growth (default {d.MaxStretch})");
         Console.WriteLine($"  --hard-edge <deg>     dihedral hard-edge threshold (default {d.HardEdgeAngleDegrees})");
         Console.WriteLine($"  --seams <mode>        {nameof(SeamSource.DihedralAngle)}|{nameof(SeamSource.ProvidedTags)}|{nameof(SeamSource.Both)} (default {d.Seams})");
