@@ -36,6 +36,7 @@ internal static class Program
         double maxStretch = d.MaxStretch;
         double hardEdge = d.HardEdgeAngleDegrees;
         SeamSource seams = d.Seams;
+        PackerKind packer = d.Packer;
         bool allowRotation = d.AllowRotation;
         bool powerOfTwo = d.PowerOfTwo;
 
@@ -61,6 +62,9 @@ internal static class Program
                     break;
                 case "--seams":
                     seams = Enum.Parse<SeamSource>(RequireValue(args, ref i, arg), ignoreCase: true);
+                    break;
+                case "--packer":
+                    packer = Enum.Parse<PackerKind>(RequireValue(args, ref i, arg), ignoreCase: true);
                     break;
                 case "--no-rotate":
                     allowRotation = false;
@@ -91,6 +95,7 @@ internal static class Program
             MaxStretch = maxStretch,
             HardEdgeAngleDegrees = hardEdge,
             Seams = seams,
+            Packer = packer,
             AllowRotation = allowRotation,
             PowerOfTwo = powerOfTwo,
         };
@@ -144,6 +149,7 @@ internal static class Program
         Console.WriteLine($"  --max-stretch <x>     distortion budget for chart growth (default {d.MaxStretch})");
         Console.WriteLine($"  --hard-edge <deg>     dihedral hard-edge threshold (default {d.HardEdgeAngleDegrees})");
         Console.WriteLine($"  --seams <mode>        {nameof(SeamSource.DihedralAngle)}|{nameof(SeamSource.ProvidedTags)}|{nameof(SeamSource.Both)} (default {d.Seams})");
+        Console.WriteLine($"  --packer <mode>       {nameof(PackerKind.BoundingBox)}|{nameof(PackerKind.Silhouette)} (default {d.Packer})");
         Console.WriteLine("  --no-rotate           disable 90-degree chart rotation when packing");
         Console.WriteLine("  --no-pot              do not round the atlas up to a power of two");
     }

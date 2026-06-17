@@ -37,7 +37,9 @@ public static class UVBaker
         }
 
         TexelDensityNormalizer.Normalize(charts);
-        PackResult pack = AtlasPacker.Pack(charts, options);
+        PackResult pack = options.Packer == PackerKind.Silhouette
+            ? SilhouettePacker.Pack(charts, options)
+            : AtlasPacker.Pack(charts, options);
         AtlasValidation validation = AtlasValidator.Validate(charts, triangulated.Faces.Count, pack.Efficiency);
 
         Mesh output = BuildPerWedgeMesh(triangulated.Positions, charts);

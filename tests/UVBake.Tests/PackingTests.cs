@@ -63,6 +63,51 @@ public class PackingTests
         Assert.Equal(0, OverlapValidator.CountInterChartOverlaps(charts));
     }
 
+    [Fact]
+    public void Silhouette_PacksOverlapFreeWithComparableEfficiency()
+    {
+        // The silhouette packer is overlap-free and gutter-reserved by construction. On near-convex
+        // corpus charts it is comparable to the bbox packer (its nesting advantage needs concave/overhang
+        // charts); here we assert it is a correct, non-regressing packer in the same efficiency ballpark.
+        var options = new UVBakeOptions { Resolution = 256 };
+
+        double bboxEfficiency = PackEfficiency(Primitives.Sphere(), options, PackerKind.BoundingBox, out _);
+        double silhouetteEfficiency = PackEfficiency(Primitives.Sphere(), options, PackerKind.Silhouette, out var silhouetteCharts);
+
+        Assert.Equal(0, OverlapValidator.CountInterChartOverlaps(silhouetteCharts));
+        Assert.InRange(silhouetteEfficiency, 0.8 * bboxEfficiency, 2.0 * bboxEfficiency);
+        foreach (ChartUv chart in silhouetteCharts)
+        {
+            foreach (Vector2 uv in chart.Uv)
+            {
+                Assert.InRange(uv.X, -1e-9, 1 + 1e-9);
+                Assert.InRange(uv.Y, -1e-9, 1 + 1e-9);
+            }
+        }
+    }
+
+    [Fact]
+    public void Silhouette_EndToEndProducesValidAtlas()
+    {
+        UvMesh result = UVBaker.Generate(Primitives.Sphere(), new UVBakeOptions { Resolution = 512, Packer = PackerKind.Silhouette });
+        Assert.True(result.Validation.IsValid);
+    }
+
+    private static double PackEfficiency(Mesh source, UVBakeOptions options, PackerKind kind, out List<ChartUv> charts)
+    {
+        (HalfEdgeMesh mesh, SegmentationResult seg) = Segment(source);
+        charts = [];
+        foreach (Chart chart in seg.Charts)
+        {
+            charts.Add(ChartParameterizer.Parameterize(mesh, chart.Faces));
+        }
+
+        TexelDensityNormalizer.Normalize(charts);
+        return kind == PackerKind.Silhouette
+            ? SilhouettePacker.Pack(charts, options).Efficiency
+            : AtlasPacker.Pack(charts, options).Efficiency;
+    }
+
     private static double SurfaceArea(ChartUv chart)
     {
         double area = 0;

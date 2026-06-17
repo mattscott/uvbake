@@ -57,6 +57,19 @@ public sealed class UVBakeOptions
     /// <summary>Output mesh + UV container format.</summary>
     public MeshFormat Format { get; init; } = MeshFormat.Obj;
 
+    /// <summary>Packing strategy: fast bounding-box skyline, or tighter silhouette ("Tetris") packing.</summary>
+    public PackerKind Packer { get; init; } = PackerKind.BoundingBox;
+
     /// <summary>Worker thread count; -1 uses all available cores.</summary>
     public int Threads { get; init; } = -1;
+}
+
+/// <summary>How charts are packed into the atlas.</summary>
+public enum PackerKind
+{
+    /// <summary>Skyline bottom-left packing of chart bounding boxes — fast, the default.</summary>
+    BoundingBox,
+
+    /// <summary>Silhouette-aware skyline packing of the rasterized chart shape — tighter fills.</summary>
+    Silhouette,
 }

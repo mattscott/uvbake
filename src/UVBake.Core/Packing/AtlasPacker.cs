@@ -30,7 +30,8 @@ public static class AtlasPacker
         }
 
         var size = new (double W, double H)[charts.Count];
-        double totalArea = 0;
+        double totalBoxArea = 0;
+        double totalUvArea = 0;
         for (int i = 0; i < charts.Count; i++)
         {
             (double w, double h) = BoundingBox(charts[i]);
@@ -41,16 +42,17 @@ public static class AtlasPacker
             }
 
             size[i] = (w, h);
-            totalArea += w * h;
+            totalBoxArea += w * h;
+            totalUvArea += UvArea(charts[i]);
         }
 
-        if (totalArea <= 0)
+        if (totalBoxArea <= 0)
         {
             return new PackResult(resolution, 0, charts.Count);
         }
 
         // Binary-search the largest scale (texels per UV unit) for which every padded box still fits.
-        double scaleHi = Math.Sqrt((double)resolution * resolution / totalArea);
+        double scaleHi = Math.Sqrt((double)resolution * resolution / totalBoxArea);
         double scaleLo = 0;
         (int X, int Y)[]? best = null;
         double bestScale = 0;
@@ -89,7 +91,8 @@ public static class AtlasPacker
             }
         }
 
-        double efficiency = bestScale * bestScale * totalArea / ((double)resolution * resolution);
+        // Efficiency = fraction of the atlas covered by actual island (triangle) area, not box area.
+        double efficiency = bestScale * bestScale * totalUvArea / ((double)resolution * resolution);
         return new PackResult(resolution, efficiency, charts.Count);
     }
 
@@ -137,6 +140,18 @@ public static class AtlasPacker
         }
 
         return placements;
+    }
+
+    private static double UvArea(ChartUv chart)
+    {
+        double area = 0;
+        int[] t = chart.Triangles;
+        for (int i = 0; i < t.Length; i += 3)
+        {
+            area += 0.5 * Math.Abs((chart.Uv[t[i + 1]] - chart.Uv[t[i]]).Cross(chart.Uv[t[i + 2]] - chart.Uv[t[i]]));
+        }
+
+        return area;
     }
 
     private static (double W, double H) BoundingBox(ChartUv chart)
