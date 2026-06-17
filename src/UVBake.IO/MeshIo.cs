@@ -12,6 +12,9 @@ public static class MeshIo
     /// <summary>The mesh format read and written first (Wavefront OBJ; UVs as <c>vt</c>, per-wedge <c>f v/vt/vn</c>).</summary>
     public const string PrimaryMeshExtension = ".obj";
 
+    /// <summary>glTF 2.0 output extension (write-only; per-vertex UVs, seams vertex-split).</summary>
+    public const string GltfExtension = ".gltf";
+
     /// <summary>Reads a mesh, choosing the reader by <paramref name="path"/>'s extension.</summary>
     public static Mesh Read(string path)
     {
@@ -28,11 +31,18 @@ public static class MeshIo
         ArgumentNullException.ThrowIfNull(mesh);
         ArgumentNullException.ThrowIfNull(path);
         string extension = Path.GetExtension(path);
-        if (!extension.Equals(PrimaryMeshExtension, StringComparison.OrdinalIgnoreCase))
+        if (extension.Equals(PrimaryMeshExtension, StringComparison.OrdinalIgnoreCase))
         {
-            throw new NotSupportedException($"Unsupported mesh format '{extension}'. Supported: {PrimaryMeshExtension}.");
+            ObjWriter.Write(mesh, path);
         }
-
-        ObjWriter.Write(mesh, path);
+        else if (extension.Equals(GltfExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            GltfWriter.Write(mesh, path);
+        }
+        else
+        {
+            throw new NotSupportedException(
+                $"Unsupported mesh format '{extension}'. Supported: {PrimaryMeshExtension}, {GltfExtension}.");
+        }
     }
 }
