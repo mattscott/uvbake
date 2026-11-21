@@ -1,5 +1,7 @@
 # UVBake
 
+[![ci](https://github.com/mattscott/uvbake/actions/workflows/ci.yml/badge.svg)](https://github.com/mattscott/uvbake/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A standalone, permissively-licensed, dependency-light, cross-platform **managed-C# (.NET 8)** library +
 CLI that automatically generates a **UV atlas** for a mesh: a **unique, non-overlapping**
 parameterization with the **largest possible low-distortion islands**, normalized texel density, and
@@ -11,8 +13,8 @@ dependencies** (an in-repo conjugate-gradient sparse solver), MIT-clean.
 
 > **Status: end-to-end and shipping (P1–P7 complete).** The full pipeline runs — mesh in, unique
 > bake-ready UV atlas out — validated (overlap = 0, no flips, full coverage) on the procedural corpus.
-> See [`Agents/Plans`](Agents/Plans) for the roadmap, [`Agents/Documents`](Agents/Documents) for the
-> research, and [`Agents/Documents/10-technical-debt.md`](Agents/Documents/10-technical-debt.md) for
+> See [`docs/plans`](docs/plans) for the roadmap, [`docs/design`](docs/design) for the
+> research, and [`docs/design/10-technical-debt.md`](docs/design/10-technical-debt.md) for
 > deferred/reduced items.
 
 ## Pipeline
@@ -33,7 +35,7 @@ hard edges and packed with a gutter sized for a baker's dilation skirt.
 ```
 src/
   UVBake.Core/   the library (segmentation, parameterization, packing) — dependency-light
-  UVBake.IO/     mesh readers/writers (OBJ first; per-wedge UVs at seams)
+  UVBake.IO/     mesh readers/writers (OBJ and binary FBX in; OBJ, FBX and glTF out; per-wedge UVs at seams)
   UVBake.Cli/    `uvbake in.obj -o out.obj --res 2048 ...`
 tests/
   UVBake.Tests/  unit + golden-layout tests
@@ -73,8 +75,9 @@ uvbake model.obj -o atlas.gltf
 uvbake model.obj -o atlas.obj --layout atlas.svg
 ```
 
-Run `uvbake --help` for the full option list. The CLI installs as a .NET tool (`dotnet tool install`,
-command `uvbake`).
+Run `uvbake --help` for the full option list. The CLI packs as a .NET tool, command `uvbake`. It is not on NuGet yet, so
+install it from a local build: `dotnet pack -c Release -o artifacts`, then
+`dotnet tool install --global --add-source ./artifacts UVBake.Cli`.
 
 ## Library
 
@@ -93,7 +96,11 @@ if (result.Validation.IsValid)
 ```
 
 `UVBaker.Generate` also has an overload taking `IProgress<string>` (per-phase progress) and a
-`CancellationToken`. `UVBake.Core` and `UVBake.IO` are published as NuGet packages.
+`CancellationToken`. `UVBake.Core` and `UVBake.IO` pack as NuGet packages (`dotnet pack`; not yet on nuget.org).
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Please report security issues privately ([SECURITY.md](SECURITY.md)).
 
 ## License
 
