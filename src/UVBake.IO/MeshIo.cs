@@ -5,7 +5,7 @@ namespace UVBake.IO;
 /// <summary>
 /// Entry point for mesh I/O, dispatching by file extension. OBJ (with per-wedge UVs so seams
 /// round-trip) is the format read and written first; glTF arrives in a later phase
-/// (see <c>Agents/Plans/02-phase-roadmap.md</c>).
+/// (see <c>docs/plans/02-phase-roadmap.md</c>).
 /// </summary>
 public static class MeshIo
 {
@@ -15,14 +15,26 @@ public static class MeshIo
     /// <summary>glTF 2.0 output extension (write-only; per-vertex UVs, seams vertex-split).</summary>
     public const string GltfExtension = ".gltf";
 
+    /// <summary>Binary FBX extension (read + write; per-wedge UVs + computed smooth normals).</summary>
+    public const string FbxExtension = ".fbx";
+
     /// <summary>Reads a mesh, choosing the reader by <paramref name="path"/>'s extension.</summary>
     public static Mesh Read(string path)
     {
         ArgumentNullException.ThrowIfNull(path);
         string extension = Path.GetExtension(path);
-        return extension.Equals(PrimaryMeshExtension, StringComparison.OrdinalIgnoreCase)
-            ? ObjReader.Read(path)
-            : throw new NotSupportedException($"Unsupported mesh format '{extension}'. Supported: {PrimaryMeshExtension}.");
+        if (extension.Equals(PrimaryMeshExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            return ObjReader.Read(path);
+        }
+
+        if (extension.Equals(FbxExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            return FbxReader.Read(path);
+        }
+
+        throw new NotSupportedException(
+            $"Unsupported mesh format '{extension}'. Supported: {PrimaryMeshExtension}, {FbxExtension}.");
     }
 
     /// <summary>Writes a mesh, choosing the writer by <paramref name="path"/>'s extension.</summary>
@@ -39,10 +51,14 @@ public static class MeshIo
         {
             GltfWriter.Write(mesh, path);
         }
+        else if (extension.Equals(FbxExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            FbxWriter.Write(mesh, path);
+        }
         else
         {
             throw new NotSupportedException(
-                $"Unsupported mesh format '{extension}'. Supported: {PrimaryMeshExtension}, {GltfExtension}.");
+                $"Unsupported mesh format '{extension}'. Supported: {PrimaryMeshExtension}, {GltfExtension}, {FbxExtension}.");
         }
     }
 }
