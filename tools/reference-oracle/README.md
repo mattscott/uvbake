@@ -12,7 +12,7 @@ unique, bake-ready texture atlases (segment → parameterize → pack). It is de
 and cross-platform, which makes it the natural primary oracle: run it on each corpus mesh and commit
 the resulting UV layout + summary metrics (chart count, total seam length, max/avg stretch, packing
 efficiency, overlap = 0) as goldens. See
-[`../../Agents/Documents/08-prior-art-tools-and-libraries.md`](../../Agents/Documents/08-prior-art-tools-and-libraries.md).
+[`../../docs/design/08-prior-art-tools-and-libraries.md`](../../docs/design/08-prior-art-tools-and-libraries.md).
 
 ## Secondary cross-check — Blender (headless)
 
@@ -42,6 +42,6 @@ The tier-A procedural corpus (`cube`, `sphere`, `cylinder`, `beveled-box`, `toru
 ## Status
 
 Harness in place (P1). The native xatlas build + golden generation is **not** run yet — it lights up the
-golden gate in **P4** (see [`../../Agents/Plans/02-phase-roadmap.md`](../../Agents/Plans/02-phase-roadmap.md)).
+golden gate in **P4** (see [`../../docs/plans/02-phase-roadmap.md`](../../docs/plans/02-phase-roadmap.md)).
 The working tree (`_work/`, logs) and downloaded raws are git-ignored; the committed goldens under
 `tests/golden/` are not.

@@ -1,7 +1,7 @@
 # UVBake — Implementation Plans
 
 The build plan for a managed-C# automatic UV-atlas generator, based on the research in
-[../Documents/](../Documents/). Direction in one line: **segment the mesh into the largest
+[../design/](../design/). Direction in one line: **segment the mesh into the largest
 low-distortion charts, flatten each injectively (no flips/overlaps), normalize texel density, and pack
 into a unique bake-ready atlas** — the classic segment → parameterize → pack pipeline, tuned for
 baking.
@@ -26,4 +26,4 @@ validated in isolation (no-flip guarantee + solver correctness/perf) before P4 b
 **Pipeline context.** UVBake is the **UV-unwrap** stage: it takes a mesh that has clean topology but no
 UVs (e.g. from an upstream quad-remesher) and produces the same mesh with a unique, non-overlapping UV
 atlas, for a downstream texture/normal baker. It does **not** retopologize and does **not** bake — see
-[../Documents/00-overview.md](../Documents/00-overview.md) §2.
+[../design/00-overview.md](../design/00-overview.md) §2.

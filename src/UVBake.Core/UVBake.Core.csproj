@@ -4,7 +4,7 @@
     <RootNamespace>UVBake.Core</RootNamespace>
     <AssemblyName>UVBake.Core</AssemblyName>
     <Description>Automatic UV atlas generator (chart segmentation + parameterization + packing) — managed, dependency-light.</Description>
-    <!-- Core keeps a dependency-light runtime graph (see Agents/Documents/08). -->
+    <!-- Core keeps a dependency-light runtime graph (see docs/design/08). -->
   </PropertyGroup>
 
   <ItemGroup>

@@ -26,7 +26,7 @@ public enum SeamSource
 /// <summary>
 /// Options controlling UV atlas generation. Defaults target a bake-ready atlas: bounded distortion,
 /// unique non-overlapping islands grown as large as the distortion budget allows, consistent texel
-/// density, and seams on hard edges. See <c>Agents/Documents</c> for the rationale behind each setting.
+/// density, and seams on hard edges. See <c>docs/design</c> for the rationale behind each setting.
 /// </summary>
 public sealed class UVBakeOptions
 {

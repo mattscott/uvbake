@@ -34,7 +34,7 @@ Algorithmic influences and attributions (clean-room — read for understanding)
 
   R. Sawhney, K. Crane. "Boundary First Flattening." (ACM TOG 2018.)
 
-See Agents/Documents/references.md for the full bibliography.
+See docs/design/references.md for the full bibliography.
 
 ================================================================================
 Reference oracle (test-only; not shipped, not linked)
@@ -47,7 +47,7 @@ code from them is included or redistributed.
 Third-party runtime dependencies
 ================================================================================
 The core ships dependency-light. Permissively-licensed managed packages are added
-per phase (Agents/Plans/02-phase-roadmap.md) and listed here as they land:
+per phase (docs/plans/02-phase-roadmap.md) and listed here as they land:
 
   CSparse.NET   sparse direct/iterative linear solves (LSCM/ARAP)   (MIT)
 

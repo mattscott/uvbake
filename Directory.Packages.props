@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <!--
-    Runtime dependencies are added per phase (see Agents/Plans/02-phase-roadmap.md), all
+    Runtime dependencies are added per phase (see docs/plans/02-phase-roadmap.md), all
     pure-managed and MIT-clean — e.g. CSparse.NET (sparse linear solves for LSCM/ARAP). Native
     UV libraries (xatlas, UVAtlas) are used only as an offline reference oracle, never linked.
   -->

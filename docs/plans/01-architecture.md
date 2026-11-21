@@ -22,7 +22,7 @@ UVBake.sln
 
 `UVBake.Core` keeps a **dependency-light** runtime graph: segmentation, parameterization, packing, and
 validation are in-repo; the only external option is a managed sparse solver behind `ISparseSolver`. No
-native dependencies ([../Documents/08-prior-art-tools-and-libraries.md](../Documents/08-prior-art-tools-and-libraries.md)).
+native dependencies ([../design/08-prior-art-tools-and-libraries.md](../design/08-prior-art-tools-and-libraries.md)).
 
 ## Core data structures
 

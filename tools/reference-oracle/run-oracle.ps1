@@ -5,7 +5,7 @@
 # thread count) and emits an OBJ with UVs plus summary metrics (chart count, total seam length, max/avg
 # stretch, packing efficiency, overlap=0). UVBake's own output is later diffed against these goldens
 # (hard-gate overlap=0 + coverage; tolerance-gate the metric scorecard) — see
-# ../../Agents/Documents/07-quality-artifacts-and-validation.md.
+# ../../docs/design/07-quality-artifacts-and-validation.md.
 #
 # Usage:
 #   ./run-oracle.ps1 -XatlasTool <path-to-built-xatlas-example>

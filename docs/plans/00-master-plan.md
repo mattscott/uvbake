@@ -10,7 +10,7 @@ golden-tested, zero-native-dependency mold.
 
 ## Why this is achievable now
 
-The research ([../Documents/](../Documents/)) confirms UV-atlas generation is a **well-understood,
+The research ([../design/](../design/)) confirms UV-atlas generation is a **well-understood,
 decades-old pipeline**, not open research: *segment → cut to disk → parameterize → normalize → pack*
 (Lévy et al. 2002; bounded-distortion cutting, Sorkine et al. 2002). Every stage has a clear algorithm
 and a permissive open reference (**xatlas**). The one genuinely hard property — **injectivity** (no
@@ -63,14 +63,14 @@ validator. The only nontrivial dependency is a sparse linear solver, for which m
 1. **Injectivity — the #1 correctness risk.** Conformal/ARAP energies are finite at a flip, so they do
    *not* prevent foldovers; overlapping/mirrored UVs corrupt a bake. Mitigate: **SLIM (symmetric
    Dirichlet) flip-barrier** from a Tutte/MVC flip-free seed, **+ a signed-area + grid/BVH overlap
-   validator** as a hard gate ([../Documents/04-parameterization-and-distortion.md](../Documents/04-parameterization-and-distortion.md), [../Documents/07-quality-artifacts-and-validation.md](../Documents/07-quality-artifacts-and-validation.md)).
+   validator** as a hard gate ([../design/04-parameterization-and-distortion.md](../design/04-parameterization-and-distortion.md), [../design/07-quality-artifacts-and-validation.md](../design/07-quality-artifacts-and-validation.md)).
 2. **Managed sparse solver.** LSCM/ARAP/SLIM are sparse solves; no pure-managed unwrapper exists.
    Mitigate: an `ISparseSolver` seam — default MIT (Math.NET + clean-room Cholesky), CSparse.NET (LGPL)
-   as a dynamic-linked option ([../Documents/06-acceleration-and-performance.md](../Documents/06-acceleration-and-performance.md)).
+   as a dynamic-linked option ([../design/06-acceleration-and-performance.md](../design/06-acceleration-and-performance.md)).
 3. **Triangulation determinism.** Disagreeing with a downstream baker on a quad's diagonal bakes wrong
-   normals. Mitigate: pin shortest-diagonal + UV tiebreak ([../Documents/02-the-atlas-pipeline.md](../Documents/02-the-atlas-pipeline.md) §3).
+   normals. Mitigate: pin shortest-diagonal + UV tiebreak ([../design/02-the-atlas-pipeline.md](../design/02-the-atlas-pipeline.md) §3).
 4. **Gutter ↔ packing coupling.** Reserve the gutter by dilating silhouettes *before* packing, not as a
-   post-step ([../Documents/05-packing-and-texel-density.md](../Documents/05-packing-and-texel-density.md) §2).
+   post-step ([../design/05-packing-and-texel-density.md](../design/05-packing-and-texel-density.md) §2).
 
 ## Working method
 

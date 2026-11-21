@@ -2,7 +2,7 @@
 
 Each phase lists **tasks**, **deliverables**, and **acceptance tests**. A phase is "done" only when its
 acceptance tests pass on the shared corpus (`tests/corpus/`). Effort is rough relative sizing. Doc
-references point at [../Documents/](../Documents/).
+references point at [../design/](../design/).
 
 ---
 
