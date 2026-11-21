@@ -10,9 +10,19 @@ namespace UVBake.IO;
 /// (primitives, raw or zlib-compressed typed arrays, and strings) — into an <see cref="FbxNode"/> tree.
 /// No Autodesk SDK and no native code; array decompression uses the framework <see cref="ZLibStream"/>.
 /// </summary>
+/// <remarks>
+/// Input is treated as untrusted: every length and offset read from the file is checked before it is used,
+/// nesting depth and array sizes are capped, and any malformed file fails with
+/// <see cref="InvalidDataException"/> rather than hanging, overflowing the stack, or exhausting memory.
+/// </remarks>
 internal sealed class FbxBinaryParser
 {
     private static readonly byte[] Magic = Encoding.ASCII.GetBytes("Kaydara FBX Binary  ");
+
+    // Hardening limits for untrusted input. Real FBX files nest well under 20 levels deep.
+    private const int MaxDepth = 64;
+    private const long MaxArrayBytes = 512L * 1024 * 1024;
+    private const long MaxDeflateRatio = 1032; // DEFLATE's theoretical maximum expansion
 
     private readonly byte[] _data;
     private int _pos;
@@ -24,12 +34,21 @@ internal sealed class FbxBinaryParser
     }
 
     /// <summary>Parses a stream into a synthetic root node whose children are the top-level records.</summary>
+    /// <exception cref="InvalidDataException">The stream is not a well-formed binary FBX file.</exception>
     public static FbxNode Parse(Stream stream)
     {
         ArgumentNullException.ThrowIfNull(stream);
         using var ms = new MemoryStream();
         stream.CopyTo(ms);
-        return new FbxBinaryParser(ms.ToArray()).ParseDocument();
+        try
+        {
+            return new FbxBinaryParser(ms.ToArray()).ParseDocument();
+        }
+        catch (Exception ex) when (ex is ArgumentException or IndexOutOfRangeException or OverflowException)
+        {
+            // Truncated or inconsistent records surface as a single, catchable error type.
+            throw new InvalidDataException("malformed binary FBX file.", ex);
+        }
     }
 
     private FbxNode ParseDocument()
@@ -46,7 +65,7 @@ internal sealed class FbxBinaryParser
         var root = new FbxNode("(root)");
         while (_pos + (3 * _offsetSize) + 1 <= _data.Length)
         {
-            FbxNode? node = ReadNode();
+            FbxNode? node = ReadNode(0);
             if (node is null)
             {
                 break;
@@ -58,17 +77,38 @@ internal sealed class FbxBinaryParser
         return root;
     }
 
-    private FbxNode? ReadNode()
+    private FbxNode? ReadNode(int depth)
     {
+        if (depth > MaxDepth)
+        {
+            throw new InvalidDataException($"FBX nesting is deeper than {MaxDepth} levels.");
+        }
+
+        int nodeStart = _pos;
         long endOffset = ReadOffset();
         long numProperties = ReadOffset();
         ReadOffset(); // property-list length (unused — we read each property)
+        Require(1);
         int nameLen = _data[_pos++];
         if (endOffset == 0)
         {
             return null; // null record (3*offsetSize+1 zero bytes) terminates a child list / the document
         }
 
+        // A record must end after it starts and inside the file. This also guarantees forward progress,
+        // so a hostile offset can never send the parser backwards into an endless loop.
+        if (endOffset <= nodeStart || endOffset > _data.Length)
+        {
+            throw new InvalidDataException($"FBX record at {nodeStart} has an invalid end offset {endOffset}.");
+        }
+
+        // Every property takes at least one byte, so a larger count cannot be honest.
+        if (numProperties < 0 || numProperties > endOffset - _pos)
+        {
+            throw new InvalidDataException($"FBX record at {nodeStart} claims {numProperties} properties.");
+        }
+
+        Require(nameLen);
         var node = new FbxNode(Encoding.ASCII.GetString(_data, _pos, nameLen));
         _pos += nameLen;
 
@@ -79,7 +119,7 @@ internal sealed class FbxBinaryParser
 
         while (_pos < endOffset)
         {
-            FbxNode? child = ReadNode();
+            FbxNode? child = ReadNode(depth + 1);
             if (child is null)
             {
                 break;
@@ -88,17 +128,23 @@ internal sealed class FbxBinaryParser
             node.Children.Add(child);
         }
 
+        if (_pos > endOffset)
+        {
+            throw new InvalidDataException($"FBX record at {nodeStart} overruns its end offset.");
+        }
+
         _pos = (int)endOffset;
         return node;
     }
 
     private object ReadProperty()
     {
+        Require(1);
         char type = (char)_data[_pos++];
         switch (type)
         {
             case 'Y': return (long)ReadInt16();
-            case 'C': return _data[_pos++] != 0;
+            case 'C': Require(1); return _data[_pos++] != 0;
             case 'I': return (long)ReadInt32();
             case 'F': return (double)ReadSingle();
             case 'D': return ReadDouble();
@@ -119,9 +165,41 @@ internal sealed class FbxBinaryParser
         int length = ReadInt32();
         int encoding = ReadInt32();
         int compressedLength = ReadInt32();
+        long rawBytes = (long)length * elementSize;
+        if (length < 0 || rawBytes > MaxArrayBytes)
+        {
+            throw new InvalidDataException($"FBX array length {length} is out of range.");
+        }
+
+        Require(compressedLength);
         ReadOnlySpan<byte> payload = _data.AsSpan(_pos, compressedLength);
         _pos += compressedLength;
-        byte[] raw = encoding == 1 ? Inflate(payload, length * elementSize) : payload.ToArray();
+
+        byte[] raw;
+        if (encoding == 0)
+        {
+            if (compressedLength != rawBytes)
+            {
+                throw new InvalidDataException("FBX raw array size does not match its element count.");
+            }
+
+            raw = payload.ToArray();
+        }
+        else if (encoding == 1)
+        {
+            // Refuse decompression bombs: the declared size must be reachable from the compressed bytes.
+            if (rawBytes > (compressedLength * MaxDeflateRatio) + 1024)
+            {
+                throw new InvalidDataException("FBX compressed array claims an impossible expanded size.");
+            }
+
+            raw = Inflate(payload, (int)rawBytes);
+        }
+        else
+        {
+            throw new InvalidDataException($"unknown FBX array encoding {encoding}.");
+        }
+
         return (raw, length);
     }
 
@@ -202,12 +280,18 @@ internal sealed class FbxBinaryParser
             read += n;
         }
 
+        if (read != rawLength)
+        {
+            throw new InvalidDataException("FBX compressed array is shorter than its declared size.");
+        }
+
         return buffer;
     }
 
     private string ReadString()
     {
         int len = ReadInt32();
+        Require(len);
         string s = Encoding.Latin1.GetString(_data, _pos, len); // Latin1 preserves the \0\1 name separator
         _pos += len;
         return s;
@@ -216,13 +300,24 @@ internal sealed class FbxBinaryParser
     private byte[] ReadRaw()
     {
         int len = ReadInt32();
+        Require(len);
         byte[] bytes = _data.AsSpan(_pos, len).ToArray();
         _pos += len;
         return bytes;
     }
 
+    /// <summary>Throws unless <paramref name="count"/> bytes remain at the current position.</summary>
+    private void Require(int count)
+    {
+        if (count < 0 || count > _data.Length - _pos)
+        {
+            throw new InvalidDataException($"FBX field at {_pos} claims {count} bytes past the end of the file.");
+        }
+    }
+
     private long ReadOffset()
     {
+        Require(_offsetSize);
         long value = _offsetSize == 8
             ? BinaryPrimitives.ReadInt64LittleEndian(_data.AsSpan(_pos))
             : BinaryPrimitives.ReadUInt32LittleEndian(_data.AsSpan(_pos));
